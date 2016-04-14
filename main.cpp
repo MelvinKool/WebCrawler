@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <assert.h>
 #include <algorithm>
+#include <regex>
 
 size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 {
@@ -51,7 +52,7 @@ int main(int argc, char* argv[] )
 {
     int numThreads = 4;
     std::string url;
-    if(argc < 2 || argc > 1 && std::string(argv[1]) == "--help"){
+    if(argc < 2 || (argc > 1 && std::string(argv[1]) == "--help")){
         showOptions();
         return 0;
     }
@@ -63,10 +64,25 @@ int main(int argc, char* argv[] )
     }
     else if(std::string(argv[1]) == "-a"){
         assert(argc > 2);
+        //validate link?
         url = std::string(argv[2]);
     }
     std::string pageContent = getPage(url);
-    std::cout << pageContent << std::endl;
+    // std::cout << pageContent << std::endl;
+    const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
+                                    "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
+    std::cout << urlRegexStr << std::endl;
+    const std::regex urlRegex(urlRegexStr.c_str());
+    std::smatch sm;
+    std::string::const_iterator searchStart( pageContent.cbegin() );
+    while (std::regex_search(searchStart, pageContent.cend() ,sm, urlRegex))
+    {
+        for (auto it : sm)
+        {
+            std::cout << it << std::endl; // *i only yields the captured part
+        }
+        searchStart += sm.position() + sm.length();
+    }
     //curl_global_cleanup(); niet thread safe, anders wel gebruiken
     return EXIT_SUCCESS;
 }
