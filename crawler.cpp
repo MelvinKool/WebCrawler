@@ -21,9 +21,8 @@ namespace webcrawler
 
     void Crawler::crawl(std::string url){
         std::string pageContent;
-        WebCurl curl;
         try{
-            pageContent = curl.getPage(url);
+            pageContent = WebCurl::getPage(url);
         }
         catch(std::runtime_error err){
             std::cout << "AN ERROR OCCURED: " << err.what() << std::endl;
