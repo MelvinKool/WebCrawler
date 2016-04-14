@@ -1,7 +1,6 @@
 #include <stdexcept>
 #include <string>
 #include <curl/curl.h> //sudo aptitude install libcurl-dev && sudo apt-get install libcurl4-gnutls-dev
-#include <iostream>
 
 #include "webcurl.h"
 
@@ -30,7 +29,6 @@ std::string WebCurl::getPage(std::string url){
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
     code = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
-    std::cout << code << std::endl;
     if (code != CURLE_OK)
             throw std::runtime_error("Failed to retrieve web page");
     return readBuffer;
