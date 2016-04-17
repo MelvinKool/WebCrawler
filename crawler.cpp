@@ -2,6 +2,8 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
+#include <chrono>
 
 #include "webcurl.h"
 #include "crawler.h"
@@ -17,6 +19,7 @@ namespace webcrawler
     }
 
     void Crawler::crawl(std::string& url){
+        std::cout << "crawling next.... !!!!!!!!! " << url << std::endl;
         std::string pageContent;
         try{
             pageContent = WebCurl::getPage(url);
@@ -34,8 +37,17 @@ namespace webcrawler
         while (std::regex_search(searchStart, pageContent.cend() ,sm, urlRegex))
         {
             std::cout << sm[0] << std::endl;
-            urlPool.push(sm[0]);
+            if(foundURLs.find(sm[0]) == foundURLs.end()){
+                foundURLs.insert(sm[0]);
+                urlPool.push(sm[0]);
+            }
             searchStart += sm.position() + sm.length();
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if(!urlPool.empty()){
+            std::string nextURL = urlPool.front();
+            urlPool.pop();
+            crawl(nextURL);
         }
     }
 }

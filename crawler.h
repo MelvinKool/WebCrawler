@@ -3,6 +3,8 @@
 
 #include <string>
 #include <queue>
+#include <unordered_set>
+
 namespace webcrawler
 {
     class Crawler
@@ -10,6 +12,7 @@ namespace webcrawler
     private:
         int numThreads;
         std::queue<std::string> urlPool;
+        std::unordered_set<std::string> foundURLs;
         void crawl(std::string& url);
     public:
         Crawler(int numberThreads);
