@@ -40,8 +40,8 @@ int main(int argc, char* argv[] )
         //validate link?
         url = std::string(argv[2]);
     }
-    Crawler crawler(url,numThreads);
-    crawler.start();
+    Crawler crawler(numThreads);
+    crawler.start(url);
     //curl_global_cleanup(); niet thread safe, anders wel gebruiken
     return EXIT_SUCCESS;
 }

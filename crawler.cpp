@@ -8,18 +8,15 @@
 
 namespace webcrawler
 {
-    Crawler::Crawler(std::string startURL, int numThreads){
+    Crawler::Crawler(int numThreads){
         this->numThreads = numThreads;
-        urlPool.push(startURL);
     }
 
-    void Crawler::start(){
-        std::string firstUrl = urlPool.front();
-        urlPool.pop();
-        crawl(firstUrl);
+    void Crawler::start(std::string& startURL){
+        crawl(startURL);
     }
 
-    void Crawler::crawl(std::string url){
+    void Crawler::crawl(std::string& url){
         std::string pageContent;
         try{
             pageContent = WebCurl::getPage(url);
@@ -36,10 +33,8 @@ namespace webcrawler
         std::string::const_iterator searchStart( pageContent.cbegin() );
         while (std::regex_search(searchStart, pageContent.cend() ,sm, urlRegex))
         {
-            for (auto it : sm)
-            {
-                std::cout << it << std::endl; // *i only yields the captured part
-            }
+            std::cout << sm[0] << std::endl;
+            urlPool.push(sm[0]);
             searchStart += sm.position() + sm.length();
         }
     }

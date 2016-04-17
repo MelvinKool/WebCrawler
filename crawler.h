@@ -10,10 +10,10 @@ namespace webcrawler
     private:
         int numThreads;
         std::queue<std::string> urlPool;
-        void crawl(std::string url);
+        void crawl(std::string& url);
     public:
-        Crawler(std::string startURL, int numberThreads);
-        void start();
+        Crawler(int numberThreads);
+        void start(std::string& startURL);
     };
 }
 #endif

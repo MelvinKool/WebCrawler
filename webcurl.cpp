@@ -13,7 +13,7 @@ size_t WebCurl::writeCallback(char* buf, size_t size, size_t nmemb, void* up)
     return size*nmemb; //tell curl how many bytes we handled
 }
 
-std::string WebCurl::getPage(std::string url){
+std::string WebCurl::getPage(std::string& url){
     CURLcode code;
     CURL *curl;
     curl_global_init(CURL_GLOBAL_DEFAULT);
