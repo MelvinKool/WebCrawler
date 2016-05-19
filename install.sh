@@ -1,5 +1,16 @@
 #!/bin/bash
 #dependencies
 #g++ | gcc > 4.9
-sudo apt-get install aptitude
-sudo aptitude install libcurl-dev && sudo apt-get install libcurl4-gnutls-dev
+#gumbo
+[[ $(whoami) != 'root' ]] && echo "run as sudo!" && exit 1
+echo "The install will update with apt-get update. continue(y/n)"
+read yn
+[[ "$yn" == 'n' ]] && exit
+apt-get install aptitude
+aptitude install libcurl-dev && sudo apt-get install libcurl4-gnutls-dev
+apt-get install libtool
+git clone git@github.com:google/gumbo-parser.git
+#./autogen.sh
+#./configure
+#make
+#make install

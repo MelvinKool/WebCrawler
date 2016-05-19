@@ -2,6 +2,7 @@
 #include <string>
 #include <assert.h>
 #include <algorithm>
+#include <curl/curl.h>
 
 #include "crawler.h"
 
@@ -42,6 +43,6 @@ int main(int argc, char* argv[] )
     }
     Crawler crawler(numThreads);
     crawler.start(url);
-    //curl_global_cleanup(); niet thread safe, anders wel gebruiken
+    curl_global_cleanup(); //not thread safe, so only use in main
     return EXIT_SUCCESS;
 }

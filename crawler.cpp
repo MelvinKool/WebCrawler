@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 
+#include "tinyxml2.h"
 #include "webcurl.h"
 #include "crawler.h"
 
@@ -19,15 +20,16 @@ namespace webcrawler
     }
 
     void Crawler::crawl(std::string& url){
-        std::cout << "crawling next.... !!!!!!!!! " << url << std::endl;
         std::string pageContent;
         try{
             pageContent = WebCurl::getPage(url);
         }
         catch(std::runtime_error err){
             std::cout << "AN ERROR OCCURED: " << err.what() << std::endl;
-            return;//change this is the future
+            //return;//change this is the future
         }
+        tinyxml2::XMLDocument doc;
+        doc.Parse(pageContent.c_str(), 0);
         // std::cout << pageContent << std::endl;
         const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
                                         "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
@@ -43,7 +45,7 @@ namespace webcrawler
             }
             searchStart += sm.position() + sm.length();
         }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
         if(!urlPool.empty()){
             std::string nextURL = urlPool.front();
             urlPool.pop();
