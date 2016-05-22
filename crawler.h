@@ -15,7 +15,7 @@ namespace webcrawler
         int numThreads;
         std::queue<std::string> urlPool;
         std::unordered_set<std::string> foundURLs;
-        std::vector<std::string> extractLinks(tinyxml2::XMLElement* element,std::vector<std::string>& foundLinks);
+        std::vector<std::string> extractLinks(tinyxml2::XMLElement* element,std::vector<std::string>& foundLinks,std::string& baseURL);
         void crawl(std::string& url);
     public:
         Crawler(int numberThreads);

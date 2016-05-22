@@ -10,6 +10,7 @@
 #include "tinyxml2.h"
 #include "webcurl.h"
 #include "crawler.h"
+#include "url.h"
 
 namespace webcrawler
 {
@@ -21,12 +22,13 @@ namespace webcrawler
         crawl(startURL);
     }
 
-    std::vector<std::string> Crawler::extractLinks(tinyxml2::XMLElement* element,std::vector<std::string>& foundLinks){
+    std::vector<std::string> Crawler::extractLinks(tinyxml2::XMLElement* element,std::vector<std::string>& foundLinks,std::string& baseURL){
         if(std::string(element->Value()) == "a"){
             const char* foundLink = element->Attribute("href");
             if(foundLink != nullptr){
                 std::cout << foundLink << std::endl;
-                foundLinks.push_back(std::string(foundLink));
+                URL url(std::string(foundLink));
+                foundLinks.push_back(url.toString());
             }
         }
         for(tinyxml2::XMLElement* e = element->FirstChildElement(); e != nullptr; e = e->NextSiblingElement())
@@ -58,34 +60,18 @@ namespace webcrawler
         tinyxml2::XMLElement* body = html->FirstChildElement("body");
         if (body == nullptr) return;// XML_ERROR_PARSING_ELEMENT;
         std::vector<std::string> links;
-        extractLinks(body,links);
-        for(std::string item : links){
-            std::cout << item << std::endl;
+        extractLinks(body,links,url);
+        for(std::string link : links){
+            if(foundURLs.find(link) == foundURLs.end()){
+                foundURLs.insert(link);
+                urlPool.push(link);
+            }
         }
-        /* Traverse down the tree html->body->ul and then get the last <li> element under <ul>. */
-        // TiXmlNode* pLastNode = doc.FirstChild().FirstChild("body").FirstChild("ul").LastChild("li");
-        //
-        // /* Now that we have the last one, we can get the previous sibling
-        //  which gives us the second to last one */
-        // TiXmlNode* pSecondToLastNode = pLastNode ->PreviousSibling();
-        //
-        // /* Now that we have the <li> elements we get the first child of each,
-        //  which is the <a> element, and then we get the attribute "href" on that element */
-        // const char* lastUrl = pLastNode->FirstChid()->ToElement()->Attribute("href");
-        // const char* secondToLastUrl = pSecondToLastNode->FirstChid()->ToElement()->Attribute("href");
-        // tinyxml2::XmlElement* root = _waveDoc.FirstChildElement("root");
-        //
-        // for(TiXmlElement* e = root->FirstChildElement("wave_manager"); e != NULL; e = e->NextSiblingElement("wave_manager"))
-        // {
-        //     string wmName = e->Attribute("name");
-        //
-        // }
-        // std::stringstream ss;
-        // tinyxml2::XMLPrinter printer;
-        // doc.Print( &printer );
-        // ss << printer.CStr();
-        // std::cout << ss.str() << std::endl;
-        // std::cout << pageContent << std::endl;
+        if(!urlPool.empty()){
+            std::string nextURL = urlPool.front();
+            urlPool.pop();
+            crawl(nextURL);
+        }
 
         // const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
         //                                 "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
