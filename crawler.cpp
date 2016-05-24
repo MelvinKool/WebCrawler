@@ -20,6 +20,11 @@ namespace webcrawler
 
     void Crawler::start(std::string& startURL){
         crawl(startURL);
+        while(!urlPool.empty()){
+            std::string nextURL = urlPool.front();
+            urlPool.pop();
+            crawl(nextURL);
+        }
     }
 
     std::vector<std::string> Crawler::extractLinks(tinyxml2::XMLElement* element,std::vector<std::string>& foundLinks,std::string& baseURL){
@@ -63,16 +68,11 @@ namespace webcrawler
         extractLinks(body,links,url);
         for(std::string link : links){
             if(foundURLs.find(link) == foundURLs.end()){
+                //add the url to foundurls, so the crawler won't download the page again
                 foundURLs.insert(link);
                 urlPool.push(link);
             }
         }
-        if(!urlPool.empty()){
-            std::string nextURL = urlPool.front();
-            urlPool.pop();
-            crawl(nextURL);
-        }
-
         // const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
         //                                 "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
         // const std::regex urlRegex(urlRegexStr.c_str());

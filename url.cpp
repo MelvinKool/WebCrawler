@@ -25,8 +25,16 @@ bool URL::isValidAbsolute(){
 // std::string URL::toString(){
 //
 // }
-static std::string URL::toBaseURL(std::string url){
 
+/*
+    example.com/index/index.php -> example.com/index/
+*/
+static std::string URL::toBaseURL(std::string url){
+    std::string baseURL = "";
+    std::size_t found = this->url.find_last_of("/");
+    if(found == std::string::npos){
+        baseURL = this->url + "/";
+    }
 }
 
 void URL::toAbsolute(std::string& relativeToUrl){
