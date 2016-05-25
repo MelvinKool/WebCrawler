@@ -31,14 +31,21 @@ namespace webcrawler
         if(std::string(element->Value()) == "a"){
             const char* foundLink = element->Attribute("href");
             if(foundLink != nullptr){
-                std::cout << foundLink << std::endl;
-                URL url(std::string(foundLink));
+                std::cout << "FOUND LINK: " << foundLink << std::endl;
+                std::cout << "BASE  URL: " << baseURL << std::endl;
+                // URL url(std::string(foundLink));
+                URL url;
+                url.setURL(std::string(foundLink));
+                if(!url.isValidAbsolute())
+                    url.toAbsolute(baseURL);
+                //bool b = url.isValidAbsolute();
+                std::cout << "FINAL LINK: " << foundLink << std::endl;
                 foundLinks.push_back(url.toString());
             }
         }
         for(tinyxml2::XMLElement* e = element->FirstChildElement(); e != nullptr; e = e->NextSiblingElement())
         {
-            extractLinks(e,foundLinks);
+            extractLinks(e,foundLinks,baseURL);
         }
         return foundLinks;
     }
@@ -49,10 +56,9 @@ namespace webcrawler
             pageContent = WebCurl::getPage(url);
         }
         catch(std::runtime_error err){
-            std::cout << "AN ERROR OCCURED: " << err.what() << std::endl;
+            std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
             return;//change this is the future
         }
-        std::cout << pageContent << std::endl;
         tinyxml2::XMLDocument doc;
         doc.Parse(pageContent.c_str());
         if(doc.ErrorID() != 0){

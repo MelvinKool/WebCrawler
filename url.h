@@ -7,12 +7,15 @@ class URL{
 private:
     std::string url;
 public:
-    URL(std::string url);
-    // bool normalize();
+    // URL(std::string url);
+    URL(){}
     // bool isAbsolute();
     // bool isRelative();
-    bool isValid();
+    void setURL(std::string url);
+    static std::string getFirstPiece(std::string& url);
+    static std::string toBaseURL(std::string& url);
+    bool isValidAbsolute();
     std::string toString();
-    void toAbsolute();
+    void toAbsolute(std::string& relativeToUrl);
 };
 #endif

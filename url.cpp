@@ -3,9 +3,11 @@
 #include <stdexcept>
 #include <regex>
 
-URL::URL(std::string url){
-    this->url = url;
-}
+#include "url.h"
+
+// URL::URL(std::string url){
+//     this->url = url;
+// }
 
 // bool URL::isAbsolute(){
 //
@@ -15,6 +17,28 @@ URL::URL(std::string url){
 //
 // }
 
+void URL::setURL(std::string url){
+    this->url = url;
+}
+
+std::string URL::toString(){
+    return this->url;
+}
+
+std::string URL::getFirstPiece(std::string& url){
+    std::size_t found = url.find("://");
+    if(found == std::string::npos){
+        found = url.find("/");
+    }
+    else{
+        found = url.find("/",found+3);
+    }
+    if(found == std::string::npos)
+        return url;
+    std::string firstPiece = url.substr(0,found);
+    return firstPiece;
+}
+
 bool URL::isValidAbsolute(){
     const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
                                     "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
@@ -22,43 +46,49 @@ bool URL::isValidAbsolute(){
     return std::regex_match(this->url,urlRegex);
 }
 
-// std::string URL::toString(){
-//
-// }
-
 /*
     example.com/index/index.php -> example.com/index/
 */
-static std::string URL::toBaseURL(std::string url){
+std::string URL::toBaseURL(std::string& url){
     std::string baseURL = "";
-    std::size_t found = this->url.find_last_of("/");
+    //://
+    //if(url.find("://") != std::string::npos)
+    std::size_t found = url.find_last_of("/");
     if(found == std::string::npos){
-        baseURL = this->url + "/";
+        baseURL = url + "/";
     }
+    else{
+        baseURL = url.substr(0,found + 1);
+    }
+    return baseURL;
 }
 
 void URL::toAbsolute(std::string& relativeToUrl){
-    if(isValid())
+    if(isValidAbsolute())
         return;
     //convert to base url: example.com/example/ instead of example.com/example/index.php
     std::string baseURL = URL::toBaseURL(relativeToUrl);
     std::string absoluteUrl = "";
     std::size_t found = this->url.find("/");
     if(found != std::string::npos){
-        //begins with /
+        //url begins with /
         if(found == 0){
             // domain name<relative path>
             //get the domain name
-            // absoluteUrl = domain + this->url
+            std::cout << "lets try getFirstPiece" << std::endl;
+            absoluteUrl = URL::getFirstPiece(relativeToUrl) + this->url;
         }
         //there is a / , so subfolder
         else{
-            //find last / of base url and append de url to this piece
+            //find last / of base url and append the url to this piece
+            std::cout << "subfolder relative url" << std::endl;
+            absoluteUrl = baseURL + this->url;
         }
     }
     //url is something like localhost or second.php
     else{
         //append the url to base url
-        url = baseURL +
+        absoluteUrl = baseURL + this->url;
     }
+    this->url = absoluteUrl;
 }
