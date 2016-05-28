@@ -26,12 +26,12 @@ std::string URL::toString(){
 }
 
 std::string URL::getFirstPiece(std::string& url){
-    std::size_t found = url.find("://");
+    std::size_t found = url.find("//");
     if(found == std::string::npos){
         found = url.find("/");
     }
     else{
-        found = url.find("/",found+3);
+        found = url.find("/",found+2);
     }
     if(found == std::string::npos)
         return url;
@@ -51,10 +51,10 @@ bool URL::isValidAbsolute(){
 */
 std::string URL::toBaseURL(std::string& url){
     std::string baseURL = "";
-    //://
-    //if(url.find("://") != std::string::npos)
+    // if the url is http://example.com, ignore the / in the :// part
+    std::size_t toIgnore = url.find("://");
     std::size_t found = url.find_last_of("/");
-    if(found == std::string::npos){
+    if(found == std::string::npos || found < toIgnore + 3){
         baseURL = url + "/";
     }
     else{
@@ -62,6 +62,7 @@ std::string URL::toBaseURL(std::string& url){
     }
     return baseURL;
 }
+
 
 void URL::toAbsolute(std::string& relativeToUrl){
     if(isValidAbsolute())
@@ -85,7 +86,7 @@ void URL::toAbsolute(std::string& relativeToUrl){
             absoluteUrl = baseURL + this->url;
         }
     }
-    //url is something like localhost or second.php
+    //url is something like second.php
     else{
         //append the url to base url
         absoluteUrl = baseURL + this->url;
