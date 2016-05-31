@@ -1,5 +1,6 @@
 sudo apt-get install mysql-client
 sudo apt-get install mysql-server
+sudo apt-get install libmysqlclient-dev
 #how to get into mysql
 mysql -u root -p
 # enter password here
