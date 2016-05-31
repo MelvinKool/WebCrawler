@@ -5,7 +5,7 @@ mysql -u root -p
 # enter password here
 # you have now entered your mysql database, you can now use operations
 # useful commands:
-CREATE DATABASE DB_NAME;   #dont forget to use the "'" after the operation
+CREATE DATABASE DB_NAME;   #dont forget to use the ";" after the operation
 
 use DB_NAME;   #enter your created database to do stuff
 
