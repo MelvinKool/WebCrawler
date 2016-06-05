@@ -1,9 +1,9 @@
 EXECUTABLE=webcrawler
 #gcc my_program.c `pkg-config --cflags --libs gumbo`
 CC=g++
-CFLAGS=-c -Wall -std=c++11 -g #-I/usr/local/include
-LDFLAGS=-g # -L/usr/local/lib -lgumbo
-LIBS=-lcurl
+CFLAGS=-c -Wall -std=c++11 -g -I/usr/local/include  -L/usr/local/lib
+LDFLAGS=-g -I/usr/local/include  -L/usr/local/lib
+LIBS=-lcurl -lgumbo
 DEPS=$(wildcard *.h)
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
