@@ -8,26 +8,37 @@
 #include <vector>
 #include <mysql/mysql.h>
 //#include <mysql/my_global.h>
+#include <future>
 
 // #include "tinyxml2.h"
 #include "gumbo.h"
 #include "webcurl.h"
 #include "crawler.h"
 #include "url.h"
+#include "threadpool.h"
 
 namespace webcrawler
 {
     Crawler::Crawler(int numThreads){
-        this->numThreads = numThreads;
+        this->pool = ThreadPool(numThreads);
+        std::vector< std::future<int> > results;
     }
 
     void Crawler::start(std::string& startURL){
-        crawl(startURL);
-        while(!urlPool.empty()){
-            std::string nextURL = urlPool.front();
-            urlPool.pop();
-            crawl(nextURL);
+        pool.enqueue([startURL] {
+            //task
+            crawl(startURL);
         }
+        // while(!urlPool.empty()){
+        //     //get an url to crawl
+        //     std::string nextURL = urlPool.front();
+        //     urlPool.pop();
+        //     //crawl the next url
+        //     pool.enqueue([nextURL] {
+        //         //task
+        //         crawl(nextURL);
+        //     }
+        // }
     }
 
     void Crawler::extractLinks(GumboNode* node,std::vector<std::string>& foundLinks,std::string& relativeToUrl) {
@@ -45,10 +56,14 @@ namespace webcrawler
                   url.toAbsolute(relativeToUrl);
               std::cout << "FINAL LINK: " << url.toString() << std::endl;
               foundLinks.push_back(url.toString());
-        }
-        GumboVector* children = &node->v.element.children;
-        for (unsigned int i = 0; i < children->length; ++i)
-            extractLinks(static_cast<GumboNode*>(children->data[i]),foundLinks,relativeToUrl);
+                //   pool.enqueue([nextURL] {
+                //       //task
+                //       crawl(nextURL);
+                //   }
+            }
+            GumboVector* children = &node->v.element.children;
+            for (unsigned int i = 0; i < children->length; ++i)
+                extractLinks(static_cast<GumboNode*>(children->data[i]),foundLinks,relativeToUrl);
     }
 
     void Crawler::crawl(std::string& url){

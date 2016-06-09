@@ -7,12 +7,14 @@
 #include <vector>
 // #include "tinyxml2.h"
 #include "gumbo.h"
+#include "threadpool.h"
 
 namespace webcrawler
 {
     class Crawler
     {
     private:
+        ThreadPool pool;
         int numThreads;
         std::queue<std::string> urlPool;
         std::unordered_set<std::string> foundURLs;
