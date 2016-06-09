@@ -6,6 +6,8 @@
 #include <chrono>
 #include <sstream>
 #include <vector>
+#include <mysql/mysql.h>
+//#include <mysql/my_global.h>
 
 // #include "tinyxml2.h"
 #include "gumbo.h"
@@ -73,9 +75,10 @@ namespace webcrawler
     // }
 
     void Crawler::crawl(std::string& url){
-        std::string pageContent;
+	
+	std::string pageContent;
         try{
-            pageContent = WebCurl::getPage(url);
+            pageContent = WebCurl::getPage(url);  
         }
         catch(std::runtime_error err){
             std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
@@ -92,18 +95,28 @@ namespace webcrawler
         // if (html == nullptr) return;// XML_ERROR_PARSING_ELEMENT;
         // tinyxml2::XMLElement* body = html->FirstChildElement("body");
         // if (body == nullptr) return;// XML_ERROR_PARSING_ELEMENT;
+	MYSQL *conn;
+	conn = mysql_init(NULL);
+	if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, NULL, 0)){
+		printf("Dit gaat niet goed");
+	}
         std::vector<std::string> links;
         // extractLinks(body,links,url);
         GumboOutput* output = gumbo_parse(pageContent.c_str());
         extractLinks(output->root,links,url);
         gumbo_destroy_output(&kGumboDefaultOptions, output);
         for(std::string link : links){
-            if(foundURLs.find(link) == foundURLs.end()){
+            std::string query;
+	    if(foundURLs.find(link) == foundURLs.end()){
                 //add the url to foundurls, so the crawler won't download the page again
                 foundURLs.insert(link);
                 urlPool.push(link);
+		query = "INSERT INTO links VALUES('"+ link +"')";
+		mysql_query(conn,query.c_str());
             }
         }
+	
+	mysql_close(conn);
         // const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
         //                                 "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
         // const std::regex urlRegex(urlRegexStr.c_str());
@@ -126,3 +139,4 @@ namespace webcrawler
         // }
     }
 }
+
