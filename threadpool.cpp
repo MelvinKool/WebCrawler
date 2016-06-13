@@ -3,7 +3,6 @@
 #include <vector>
 #include <deque>
 #include <condition_variable>
-
 #include "threadpool.h"
 
 void Worker::operator()()
@@ -12,29 +11,33 @@ void Worker::operator()()
     while (true)
     {
         std::unique_lock<std::mutex> locker(pool.queue_mutex);
+        //worker is free again, add to free workers
+        std::unique_lock<std::mutex> workLocker(pool.workersLocker);
+        pool.freeWorkers.insert(id);
+        workLocker.unlock();
         pool.cond.wait(locker, [this](){ return !pool.tasks.empty() || pool.stop; });
         if (pool.stop)
         {
           locker.unlock();
           return;
         }
+        //worker is busy, so remove from freeWorkers
+        workLocker.lock();
+        pool.freeWorkers.erase(id);
+        workLocker.unlock();
         task = pool.tasks.front();
         pool.tasks.pop_front();
         locker.unlock();
         task();
         //notify condition_variable
-        pool.notifier->notify_one();
+        pool.notifier.notify_one();
     }
 }
 
-void ThreadPool::setNotifier(std::condition_variable* c){
-    notifier = c;
-}
-
-ThreadPool::ThreadPool(size_t threads): stop(false)
+ThreadPool::ThreadPool(size_t threads,std::condition_variable& notifier): notifier(notifier), stop(false)
 {
     for (size_t i = 0; i < threads; ++i)
-        workers.push_back(std::thread(Worker(*this)));
+        workers.push_back(std::thread(Worker(*this,i+1)));
 }
 
 ThreadPool::~ThreadPool()
@@ -45,11 +48,7 @@ ThreadPool::~ThreadPool()
         thread.join();
 }
 
-// template<class F>
-// void ThreadPool::enqueue(F f)
-// {
-//     std::unique_lock<std::mutex> lock(queue_mutex);
-//     tasks.push_back(std::function<void()>(f));
-//     lock.unlock();
-//     cond.notify_one();
-// }
+int ThreadPool::getAmountFreeWorkers(){
+    std::lock_guard<std::mutex> workLocker(workersLocker);
+    return freeWorkers.size();
+}

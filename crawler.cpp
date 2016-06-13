@@ -19,19 +19,15 @@
 
 namespace webcrawler
 {
-    Crawler::Crawler(int numThreads){
-        pool = new ThreadPool(numThreads);
-        urlsInPool = new std::condition_variable();
-        pool->setNotifier(urlsInPool);
-    }
+
+    Crawler::Crawler(int numThreads) : pool(new ThreadPool(numThreads,urlsInPool)){}
 
     Crawler::~Crawler(){
+        std::cout << "deconstructor call..." << std::endl;
         stopped = true;
-        urlsInPool->notify_all();
+        urlsInPool.notify_all();
         delete pool;
         pool = nullptr;
-        delete urlsInPool;
-        urlsInPool = nullptr;
     }
 
     void Crawler::start(std::string& startURL){
@@ -42,27 +38,25 @@ namespace webcrawler
         while(!stopped){
             std::unique_lock<std::mutex> poolLock(url_mut);
             //check if the links pool is empty, if it is, wait for condition_variable, until it's not
-            urlsInPool->wait(poolLock,[this](){ return !urlPool.empty() || stopped; });
+            urlsInPool.wait(poolLock,[this](){ return !urlPool.empty() || stopped; });
             if(stopped){
                 poolLock.unlock();
                 return;
             }
-            //get an url to crawl
-            std::string nextURL = urlPool.front();
-            urlPool.pop();
+            //get amount of urls equal to amount of free workers and amount of links
+            unsigned int workersFree = pool->getAmountFreeWorkers();
+            for(unsigned int i = 0; i < workersFree && i < urlPool.size();i++){
+                //get an url to crawl
+                std::string nextURL = urlPool.front();
+                urlPool.pop();
+                //crawl the next url
+                pool->enqueue([&] {
+                     //task
+                     crawl(nextURL);
+                });
+            }
             poolLock.unlock();
-            //crawl the next url
-            pool->enqueue([&] {
-                 //task
-                 crawl(nextURL);
-            });
         }
-        //while running:
-            //check if the links pool is empty, if it is, wait for condition_variable, until it's not
-            //nextURL = //get link from db
-            //pool.enqueue([nextURL] {
-            //     crawl(nextURL);
-            //}
     }
 
     void Crawler::stop(){
@@ -75,14 +69,11 @@ namespace webcrawler
         GumboAttribute* href;
         if (node->v.element.tag == GUMBO_TAG_A &&
           (href = gumbo_get_attribute(&node->v.element.attributes, "href"))) {
-              std::cout << href->value << std::endl;
-              std::cout << "relativeToUrl URL: " << relativeToUrl << std::endl;
               // URL url(std::string(foundLink));
               URL url;
               url.setURL(std::string(href->value));
               if(!url.isValidAbsolute())
                   url.toAbsolute(relativeToUrl);
-              std::cout << "FINAL LINK: " << url.toString() << std::endl;
               foundLinks.push_back(url.toString());
             }
             GumboVector* children = &node->v.element.children;
@@ -91,6 +82,7 @@ namespace webcrawler
     }
 
     void Crawler::crawl(std::string& url){
+        std::cout << "Downloading " << url << "..." << std::endl;
     	std::string pageContent;
             try{
                 pageContent = WebCurl::getPage(url);

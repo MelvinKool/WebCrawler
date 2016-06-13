@@ -24,12 +24,12 @@ namespace webcrawler
         void start(std::string& startURL);
         void stop();
     private:
-        bool stopped;
+        bool stopped = false;
         int numThreads;
         ThreadPool* pool;
         std::queue<std::string> urlPool;
         std::unordered_set<std::string> foundURLs;
-        std::condition_variable* urlsInPool;
+        std::condition_variable urlsInPool;
         std::mutex url_mut;
         std::mutex found_mut;
     };

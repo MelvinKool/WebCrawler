@@ -76,13 +76,11 @@ void URL::toAbsolute(std::string& relativeToUrl){
         if(found == 0){
             // domain name<relative path>
             //get the domain name
-            std::cout << "lets try getFirstPiece" << std::endl;
             absoluteUrl = URL::getFirstPiece(relativeToUrl) + this->url;
         }
         //there is a / , so subfolder
         else{
             //find last / of base url and append the url to this piece
-            std::cout << "subfolder relative url" << std::endl;
             absoluteUrl = baseURL + this->url;
         }
     }

@@ -6,20 +6,22 @@
 #include <vector>
 #include <deque>
 #include <condition_variable>
+#include <unordered_set>
 
 class ThreadPool; // forward declare
 
 class Worker {
 public:
-    Worker(ThreadPool &s): pool(s) { }
+    Worker(ThreadPool &s, int id): pool(s), id(id) { }
     void operator()();
 private:
     ThreadPool &pool;
+    int id;
 };
 
 class ThreadPool {
 public:
-    ThreadPool(size_t threads);
+    ThreadPool(size_t threads,std::condition_variable& notifier);
     template<class F>
     void enqueue(F f)
     {
@@ -28,8 +30,8 @@ public:
         lock.unlock();
         cond.notify_one();
     }
-    void setNotifier(std::condition_variable* c);
     ~ThreadPool();
+    int getAmountFreeWorkers();
 private:
     friend class Worker;
 
@@ -38,7 +40,9 @@ private:
 
     std::mutex queue_mutex;
     std::condition_variable cond;
-    std::condition_variable* notifier;
+    std::condition_variable& notifier;
+    std::unordered_set<int> freeWorkers;
+    std::mutex workersLocker;
     bool stop;
 };
 
