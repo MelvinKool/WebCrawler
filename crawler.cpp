@@ -9,7 +9,7 @@
 #include <mysql/mysql.h>
 //#include <mysql/my_global.h>
 #include <future>
-
+#include <condition_variable>
 // #include "tinyxml2.h"
 #include "gumbo.h"
 #include "webcurl.h"
@@ -20,25 +20,53 @@
 namespace webcrawler
 {
     Crawler::Crawler(int numThreads){
-        this->pool = ThreadPool(numThreads);
-        std::vector< std::future<int> > results;
+        pool = new ThreadPool(numThreads);
+        urlsInPool = new std::condition_variable();
+        pool->setNotifier(urlsInPool);
+    }
+
+    Crawler::~Crawler(){
+        stopped = true;
+        urlsInPool->notify_all();
+        delete pool;
+        pool = nullptr;
+        delete urlsInPool;
+        urlsInPool = nullptr;
     }
 
     void Crawler::start(std::string& startURL){
-        pool.enqueue([startURL] {
+        pool->enqueue([&] {
             //task
             crawl(startURL);
+        });
+        while(!stopped){
+            std::unique_lock<std::mutex> poolLock(url_mut);
+            //check if the links pool is empty, if it is, wait for condition_variable, until it's not
+            urlsInPool->wait(poolLock,[this](){ return !urlPool.empty() || stopped; });
+            if(stopped){
+                poolLock.unlock();
+                return;
+            }
+            //get an url to crawl
+            std::string nextURL = urlPool.front();
+            urlPool.pop();
+            poolLock.unlock();
+            //crawl the next url
+            pool->enqueue([&] {
+                 //task
+                 crawl(nextURL);
+            });
         }
-        // while(!urlPool.empty()){
-        //     //get an url to crawl
-        //     std::string nextURL = urlPool.front();
-        //     urlPool.pop();
-        //     //crawl the next url
-        //     pool.enqueue([nextURL] {
-        //         //task
-        //         crawl(nextURL);
-        //     }
-        // }
+        //while running:
+            //check if the links pool is empty, if it is, wait for condition_variable, until it's not
+            //nextURL = //get link from db
+            //pool.enqueue([nextURL] {
+            //     crawl(nextURL);
+            //}
+    }
+
+    void Crawler::stop(){
+        stopped = true;
     }
 
     void Crawler::extractLinks(GumboNode* node,std::vector<std::string>& foundLinks,std::string& relativeToUrl) {
@@ -56,10 +84,6 @@ namespace webcrawler
                   url.toAbsolute(relativeToUrl);
               std::cout << "FINAL LINK: " << url.toString() << std::endl;
               foundLinks.push_back(url.toString());
-                //   pool.enqueue([nextURL] {
-                //       //task
-                //       crawl(nextURL);
-                //   }
             }
             GumboVector* children = &node->v.element.children;
             for (unsigned int i = 0; i < children->length; ++i)
@@ -75,25 +99,27 @@ namespace webcrawler
                 std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
                 return;//change this is the future
             }
-        	MYSQL *conn;
-        	conn = mysql_init(NULL);
-        	if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, NULL, 0)){
-        		printf("Dit gaat niet goed");
-        	}
+        	// MYSQL *conn;
+        	// conn = mysql_init(NULL);
+        	// if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, NULL, 0)){
+        	// 	printf("Dit gaat niet goed");
+        	// }
             std::vector<std::string> links;
             GumboOutput* output = gumbo_parse(pageContent.c_str());
             extractLinks(output->root,links,url);
             gumbo_destroy_output(&kGumboDefaultOptions, output);
             for(std::string link : links){
-                std::string query;
-    	    if(foundURLs.find(link) == foundURLs.end()){
-                //add the url to foundurls, so the crawler won't download the page again
-                foundURLs.insert(link);
-                urlPool.push(link);
-        		query = "INSERT INTO links VALUES('"+ link +"')";
-        		mysql_query(conn,query.c_str());
+                    // std::string query;
+                std::lock_guard<std::mutex> foundLock(found_mut);
+        	    if(foundURLs.find(link) == foundURLs.end()){
+                    //add the url to foundurls, so the crawler won't download the page again
+                    std::lock_guard<std::mutex> poolLock(url_mut);
+                    foundURLs.insert(link);
+                    urlPool.push(link);
+            		// query = "INSERT INTO links VALUES('"+ link +"')";
+            		// mysql_query(conn,query.c_str());
+                }
             }
-        }
-	    mysql_close(conn);
+	    // mysql_close(conn);
     }
 }

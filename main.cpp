@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cstdio>
+#include <signal.h>
 #include <assert.h>
 #include <algorithm>
 #include <curl/curl.h>
@@ -14,7 +15,7 @@ void showOptions(){
     std::cout << "--help : show help" << std::endl;
     std::cout << "-t <number> : Set amount of threads (default 4)" << std::endl;
     std::cout << "-a <link> : Set the link to begin downloading from" << std::endl;
-    std::cout << "-s <insert search term> : Set string to search for inside the database" << std::endl;
+    std::cout << "-s <search term> : Search for links inside the database" << std::endl;
 }
 
 void search(std::string find){
@@ -50,8 +51,24 @@ bool is_number(const std::string& s){
 
 //#define _AGENT      "WebCrawlerBot"
 
+//TODO
+void exit_handler(int s){
+       printf("Caught signal %d\n",s);
+       exit(1);
+}
+
 int main(int argc, char* argv[] )
 {
+    //ctrl c handler
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = exit_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, NULL);
+    /////////////////
+
     int numThreads = 4;
     std::string url;
     if(argc < 2 || (argc > 1 && std::string(argv[1]) == "--help")){

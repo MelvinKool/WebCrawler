@@ -22,7 +22,7 @@ void URL::setURL(std::string url){
 }
 
 std::string URL::toString(){
-    return this->url;
+    return url;
 }
 
 std::string URL::getFirstPiece(std::string& url){
@@ -43,7 +43,7 @@ bool URL::isValidAbsolute(){
     const std::string urlRegexStr = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))"
                                     "([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
     const std::regex urlRegex(urlRegexStr.c_str());
-    return std::regex_match(this->url,urlRegex);
+    return std::regex_match(url,urlRegex);
 }
 
 /*
@@ -70,7 +70,7 @@ void URL::toAbsolute(std::string& relativeToUrl){
     //convert to base url: example.com/example/ instead of example.com/example/index.php
     std::string baseURL = URL::toBaseURL(relativeToUrl);
     std::string absoluteUrl = "";
-    std::size_t found = this->url.find("/");
+    std::size_t found = url.find("/");
     if(found != std::string::npos){
         //url begins with /
         if(found == 0){

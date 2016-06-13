@@ -20,7 +20,15 @@ private:
 class ThreadPool {
 public:
     ThreadPool(size_t threads);
-    template<class F> void enqueue(F f);
+    template<class F>
+    void enqueue(F f)
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        tasks.push_back(std::function<void()>(f));
+        lock.unlock();
+        cond.notify_one();
+    }
+    void setNotifier(std::condition_variable* c);
     ~ThreadPool();
 private:
     friend class Worker;
@@ -30,6 +38,7 @@ private:
 
     std::mutex queue_mutex;
     std::condition_variable cond;
+    std::condition_variable* notifier;
     bool stop;
 };
 
