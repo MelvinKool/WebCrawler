@@ -8,6 +8,7 @@
 #include <vector>
 #include <mysql/mysql.h>
 //#include <mysql/my_global.h>
+#include <functional>
 #include <future>
 #include <condition_variable>
 // #include "tinyxml2.h"
@@ -16,14 +17,11 @@
 #include "crawler.h"
 #include "url.h"
 #include "threadpool.h"
-
 namespace webcrawler
 {
-
     Crawler::Crawler(int numThreads) : pool(new ThreadPool(numThreads,urlsInPool)){}
 
     Crawler::~Crawler(){
-        std::cout << "deconstructor call..." << std::endl;
         stopped = true;
         urlsInPool.notify_all();
         delete pool;
@@ -38,13 +36,17 @@ namespace webcrawler
         while(!stopped){
             std::unique_lock<std::mutex> poolLock(url_mut);
             //check if the links pool is empty, if it is, wait for condition_variable, until it's not
-            urlsInPool.wait(poolLock,[this](){ return !urlPool.empty() || stopped; });
+            do {
+                urlsInPool.wait(poolLock);
+            }
+            while(urlPool.empty() && !stopped);
             if(stopped){
                 poolLock.unlock();
                 return;
             }
             //get amount of urls equal to amount of free workers and amount of links
             unsigned int workersFree = pool->getAmountFreeWorkers();
+            //std::cout << "Workers free: " << workersFree << std::endl;
             for(unsigned int i = 0; i < workersFree && i < urlPool.size();i++){
                 //get an url to crawl
                 std::string nextURL = urlPool.front();
@@ -55,7 +57,6 @@ namespace webcrawler
                      crawl(nextURL);
                 });
             }
-            poolLock.unlock();
         }
     }
 
@@ -82,7 +83,7 @@ namespace webcrawler
     }
 
     void Crawler::crawl(std::string& url){
-        std::cout << "Downloading " << url << "..." << std::endl;
+        std::cout << "Crawling " << url << std::endl;
     	std::string pageContent;
             try{
                 pageContent = WebCurl::getPage(url);

@@ -3,6 +3,8 @@
 #include <vector>
 #include <deque>
 #include <condition_variable>
+#include <iostream>
+#include <chrono>
 #include "threadpool.h"
 
 void Worker::operator()()
