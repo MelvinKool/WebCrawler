@@ -7,6 +7,12 @@
 #include <sstream>
 #include <vector>
 #include <mysql/mysql.h>
+#include <mysql_connection.h>
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
 //#include <mysql/my_global.h>
 #include <functional>
 #include <future>
@@ -17,6 +23,7 @@
 #include "crawler.h"
 #include "url.h"
 #include "threadpool.h"
+
 namespace webcrawler
 {
     Crawler::Crawler(int numThreads) : pool(new ThreadPool(numThreads,urlsInPool)){}
@@ -92,27 +99,35 @@ namespace webcrawler
                 std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
                 return;//change this is the future
             }
-        	// MYSQL *conn;
-        	// conn = mysql_init(NULL);
-        	// if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, NULL, 0)){
-        	// 	printf("Dit gaat niet goed");
-        	// }
             std::vector<std::string> links;
             GumboOutput* output = gumbo_parse(pageContent.c_str());
             extractLinks(output->root,links,url);
             gumbo_destroy_output(&kGumboDefaultOptions, output);
             for(std::string link : links){
-                    // std::string query;
                 std::lock_guard<std::mutex> foundLock(found_mut);
         	    if(foundURLs.find(link) == foundURLs.end()){
                     //add the url to foundurls, so the crawler won't download the page again
                     std::lock_guard<std::mutex> poolLock(url_mut);
                     foundURLs.insert(link);
                     urlPool.push(link);
-            		// query = "INSERT INTO links VALUES('"+ link +"')";
-            		// mysql_query(conn,query.c_str());
-                }
+                    // std::cout << "haii" << std::endl;
+                    /*try{
+                        sql::Driver *driver;
+                        sql::Connection *con;
+                        sql::PreparedStatement *prep_stmt;
+                        driver = get_driver_instance();
+                        con = driver->connect("localhost","root", "Timjar00");
+                        con->setSchema("LINKDB");
+                        prep_stmt = con->prepareStatement("INSERT INTO links VALUES ('?');");
+                        prep_stmt->setString(1,link);
+                        prep_stmt->execute();
+                        delete prep_stmt;
+                        delete con;
+                    }
+                    catch(sql::SQLException &e){
+                        std::cout << "Error: " << e.what() << std::endl;
+                    }*/
             }
-	    // mysql_close(conn);
+        }
     }
 }
