@@ -67,9 +67,19 @@ bool getDBCredentials(){
     return true;
 }
 
+// void mysql_cleanup(){
+//     sql::Driver::threadEnd();
+// }
+
+void cleanup(){
+    curl_global_cleanup(); //not thread safe, so only use in main
+    // mysql_cleanup();
+}
+
 //TODO
 void exit_handler(int s){
        printf("Caught signal %d\n",s);
+       cleanup();
        exit(1);
 }
 
@@ -91,6 +101,7 @@ int main(int argc, char* argv[] )
         showOptions();
         return 0;
     }
+    // sql::Driver::threadInit();
     if(!getDBCredentials()) return EXIT_FAILURE;
     if(std::string(argv[1]) == "--create"){
         std::cout << "Connecting to db..." << std::endl;
@@ -119,6 +130,6 @@ int main(int argc, char* argv[] )
     }
     Crawler crawler(numThreads);
     crawler.start(url);
-    curl_global_cleanup(); //not thread safe, so only use in main
+    cleanup();
     return EXIT_SUCCESS;
 }
