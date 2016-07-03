@@ -6,12 +6,9 @@
 #include <chrono>
 #include <sstream>
 #include <vector>
-#include <mysql/mysql.h>
-//#include <mysql/my_global.h>
 #include <functional>
 #include <future>
 #include <condition_variable>
-// #include "tinyxml2.h"
 #include "gumbo.h"
 #include "webcurl.h"
 #include "crawler.h"
@@ -19,13 +16,15 @@
 #include "threadpool.h"
 namespace webcrawler
 {
-    Crawler::Crawler(int numThreads) : pool(new ThreadPool(numThreads,urlsInPool)){}
+    Crawler::Crawler(int numThreads) : pool(new ThreadPool(numThreads,urlsInPool)), dbpool(new DBConnectionPool(numThreads)){}
 
     Crawler::~Crawler(){
         stopped = true;
         urlsInPool.notify_all();
         delete pool;
         pool = nullptr;
+        delete dbpool;
+        dbpool = nullptr;
     }
 
     void Crawler::start(std::string& startURL){
@@ -83,36 +82,33 @@ namespace webcrawler
     }
 
     void Crawler::crawl(std::string& url){
+        //TODO add url to crawled urls
+        //db code here
         std::cout << "Crawling " << url << std::endl;
     	std::string pageContent;
-            try{
-                pageContent = WebCurl::getPage(url);
+        try{
+            pageContent = WebCurl::getPage(url);
+            //add content to page content
+        }
+        catch(std::runtime_error err){
+            std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
+            return;
+        }
+        std::vector<std::string> links;
+        GumboOutput* output = gumbo_parse(pageContent.c_str());
+        extractLinks(output->root,links,url);
+        gumbo_destroy_output(&kGumboDefaultOptions, output);
+        for(std::string link : links){
+            std::lock_guard<std::mutex> foundLock(found_mut);
+            if(foundURLs.find(link) == foundURLs.end()){
+                //add the url to foundurls, so the crawler won't download the page again
+                //TODO add link to found links in db
+                //db code here
+                //if link is smaller than 500 chars, add to db
+                std::lock_guard<std::mutex> poolLock(url_mut);
+                foundURLs.insert(link);
+                urlPool.push(link);
             }
-            catch(std::runtime_error err){
-                std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
-                return;//change this is the future
-            }
-        	// MYSQL *conn;
-        	// conn = mysql_init(NULL);
-        	// if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, NULL, 0)){
-        	// 	printf("Dit gaat niet goed");
-        	// }
-            std::vector<std::string> links;
-            GumboOutput* output = gumbo_parse(pageContent.c_str());
-            extractLinks(output->root,links,url);
-            gumbo_destroy_output(&kGumboDefaultOptions, output);
-            for(std::string link : links){
-                    // std::string query;
-                std::lock_guard<std::mutex> foundLock(found_mut);
-        	    if(foundURLs.find(link) == foundURLs.end()){
-                    //add the url to foundurls, so the crawler won't download the page again
-                    std::lock_guard<std::mutex> poolLock(url_mut);
-                    foundURLs.insert(link);
-                    urlPool.push(link);
-            		// query = "INSERT INTO links VALUES('"+ link +"')";
-            		// mysql_query(conn,query.c_str());
-                }
-            }
-	    // mysql_close(conn);
+        }
     }
 }

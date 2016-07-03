@@ -7,8 +7,9 @@
 #include <deque>
 #include <condition_variable>
 #include <unordered_set>
+#include "databaseconnection.h"
 
-class ThreadPool; // forward declare
+class ThreadPool;
 
 class Worker {
 public:

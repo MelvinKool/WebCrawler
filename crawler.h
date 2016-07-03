@@ -10,6 +10,7 @@
 // #include "tinyxml2.h"
 #include "gumbo.h"
 #include "threadpool.h"
+#include "dbconnectionpool.h"
 
 namespace webcrawler
 {
@@ -27,6 +28,7 @@ namespace webcrawler
         bool stopped = false;
         int numThreads;
         ThreadPool* pool;
+        DBConnectionPool* dbpool;
         std::queue<std::string> urlPool;
         std::unordered_set<std::string> foundURLs;
         std::condition_variable urlsInPool;

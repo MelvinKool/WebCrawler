@@ -39,7 +39,7 @@ void Worker::operator()()
 ThreadPool::ThreadPool(size_t threads,std::condition_variable& notifier): notifier(notifier), stop(false)
 {
     for (size_t i = 0; i < threads; ++i)
-        workers.push_back(std::thread(Worker(*this,i+1)));
+        workers.push_back(std::thread(Worker(*this,i)));
 }
 
 ThreadPool::~ThreadPool()
