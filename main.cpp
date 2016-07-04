@@ -10,6 +10,8 @@
 #include "crawler.h"
 #include "config.h"
 #include "databaseconnection.h"
+#include <termios.h>
+#include <unistd.h>
 using namespace webcrawler;
 
 std::string db_host;
@@ -38,7 +40,7 @@ bool yesNo(){
 }
 
 void askForDBCredentials(){
-    std::string host,user,password,name;
+    std::string host,user,name;
     std::cout << "Database host: ";
     std::getline(std::cin,host);
     db_host = host;
@@ -49,8 +51,16 @@ void askForDBCredentials(){
     std::getline(std::cin,user);
     db_user = user;
     std::cout  << "Password: ";
+    termios oldt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    termios newt = oldt;
+    newt.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    std::string password;
     std::getline(std::cin,password);
     db_password = password;
+    std::cout << "\n" << std::endl;
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }
 
 bool getDBCredentials(){
