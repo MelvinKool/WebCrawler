@@ -75,7 +75,7 @@ namespace webcrawler{
         try{
             executeStatement("CREATE TABLE IF NOT EXISTS links ("
                             "id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
-                            "url VARCHAR(500),"
+                            "url VARCHAR(500) NOT NULL UNIQUE,"
                             "content TEXT,"
                             "crawled_on DATETIME"
                             ");");
@@ -113,4 +113,28 @@ namespace webcrawler{
         return links;
     }
 
+    void DatabaseConnection::insertLink(std::string& link){
+        std::string insert_str = "INSERT IGNORE INTO links SET url=?;";
+        try{
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(con->prepareStatement(insert_str));
+            prep_stmt->setString(1,link);
+            prep_stmt->execute();
+        }
+        catch(sql::SQLException &e){
+            throw e;
+        }
+    }
+
+    void DatabaseConnection::insertContent(std::string& link,std::string& content){
+        std::string insertContentStr = "UPDATE links SET content=?,crawled_on=NOW() WHERE url=?;";
+        try{
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(con->prepareStatement(insertContentStr));
+            prep_stmt->setString(1,content);
+            prep_stmt->setString(2,link);
+            prep_stmt->execute();
+        }
+        catch(sql::SQLException &e){
+            throw e;
+        }
+    }
 }

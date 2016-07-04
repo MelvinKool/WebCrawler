@@ -59,7 +59,7 @@ void askForDBCredentials(){
     std::string password;
     std::getline(std::cin,password);
     db_password = password;
-    std::cout << "\n" << std::endl;
+    std::cout << std::endl;
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }
 
@@ -109,7 +109,7 @@ int main(int argc, char* argv[] )
     sigaction(SIGINT, &sigIntHandler, NULL);
     /////////////////
 
-    int numThreads = 4;
+    int numThreads = 8;
     std::string url;
     if(argc < 2 || (argc > 1 && std::string(argv[1]) == "--help")){
         showOptions();

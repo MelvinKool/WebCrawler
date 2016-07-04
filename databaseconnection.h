@@ -18,7 +18,8 @@ namespace webcrawler{
             void dropTables();
             void setSchema(std::string& dbName);
             std::vector<std::string> getLinksToCrawl(int amount, int daysAgo);
-            //void insertLink(std::string& link);
+            void insertLink(std::string& link);
+            void insertContent(std::string& link,std::string& content);
         private:
             sql::Driver* driver;
             std::unique_ptr<sql::Connection> con;

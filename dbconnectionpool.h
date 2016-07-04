@@ -20,6 +20,7 @@ namespace webcrawler{
     public:
         PoolConnection(int id);
         DatabaseConnection* getConnection();
+        int getId();
     private:
         std::unique_ptr<DatabaseConnection> connection;
         int id;
@@ -35,11 +36,12 @@ namespace webcrawler{
     class DBConnectionPool {
     public:
         DBConnectionPool(int nrConnections);
-        DatabaseConnection* getFreeConnection();
+        ~DBConnectionPool();
+        PoolConnection* getFreeConnection();
         void releaseConnection(int connId);
     private:
         std::queue<int> freeConnections;
-        std::map<int,PoolConnection> connections;
+        std::map<int,PoolConnection*> connections;
         std::mutex freeconn_mutex;
     };
 }

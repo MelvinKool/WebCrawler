@@ -82,13 +82,14 @@ namespace webcrawler
     }
 
     void Crawler::crawl(std::string& url){
-        //TODO add url to crawled urls
-        //db code here
         std::cout << "Crawling " << url << std::endl;
     	std::string pageContent;
         try{
             pageContent = WebCurl::getPage(url);
-            //add content to page content
+            //add url to crawled urls and add content
+            PoolConnection* db = dbpool->getFreeConnection();
+            db->getConnection()->insertContent(url,pageContent);
+            dbpool->releaseConnection(db->getId());
         }
         catch(std::runtime_error err){
             std::cout << "AN ERROR OCCURED: " << err.what() << url << std::endl;
@@ -98,17 +99,24 @@ namespace webcrawler
         GumboOutput* output = gumbo_parse(pageContent.c_str());
         extractLinks(output->root,links,url);
         gumbo_destroy_output(&kGumboDefaultOptions, output);
+        PoolConnection* db = dbpool->getFreeConnection();
         for(std::string link : links){
             std::lock_guard<std::mutex> foundLock(found_mut);
             if(foundURLs.find(link) == foundURLs.end()){
                 //add the url to foundurls, so the crawler won't download the page again
-                //TODO add link to found links in db
-                //db code here
-                //if link is smaller than 500 chars, add to db
+                if(link.length() > 500) continue;
+                try{
+                    db->getConnection()->insertLink(link);
+                }
+                catch(sql::SQLException &e){
+                    std::cout << "Could not insert link" << std::endl;
+                }
+                //TODO REMOVE THIS
                 std::lock_guard<std::mutex> poolLock(url_mut);
                 foundURLs.insert(link);
                 urlPool.push(link);
             }
         }
+        dbpool->releaseConnection(db->getId());
     }
 }
