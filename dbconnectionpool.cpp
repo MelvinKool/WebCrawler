@@ -7,7 +7,8 @@ namespace webcrawler{
 
     PoolConnection::PoolConnection(int id){
         this->id = id;
-        this->connection = std::unique_ptr<DatabaseConnection>(new DatabaseConnection(db_host,db_name,db_user,db_password));
+        this->connection = std::unique_ptr<DatabaseConnection>(new DatabaseConnection(db_host,db_user,db_password));
+        connection->setSchema(db_name);
     }
 
     DatabaseConnection* PoolConnection::getConnection(){

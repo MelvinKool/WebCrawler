@@ -11,9 +11,9 @@
 #include "databaseconnection.h"
 
 namespace webcrawler{
-    DatabaseConnection::DatabaseConnection(std::string& host, std::string& dbSchema, std::string& user, std::string& password){
+    DatabaseConnection::DatabaseConnection(std::string& host, std::string& user, std::string& password){
         try{
-            connect(host,dbSchema,user,password);
+            connect(host,user,password);
         }
         catch(sql::SQLException &e){
             throw e;
@@ -23,11 +23,10 @@ namespace webcrawler{
     // DatabaseConnection::~DatabaseConnection(){
     // }
 
-    void DatabaseConnection::connect(std::string& host,std::string& dbSchema,std::string& user,std::string& password){
+    void DatabaseConnection::connect(std::string& host, std::string& user, std::string& password){
         try{
             driver = get_driver_instance();
             con = std::unique_ptr<sql::Connection>(driver->connect(host,user,password));
-            con->setSchema(dbSchema);
         }
         catch(sql::SQLException &e){
             throw e;
@@ -44,22 +43,32 @@ namespace webcrawler{
         }
     }
 
-    void DatabaseConnection::createDB(){
+    void DatabaseConnection::createDB(std::string& dbName){
         try{
-        	executeStatement("CREATE DATABASE IF NOT EXISTS webcrawler;");
+            std::string prep_stmt_str = "CREATE DATABASE IF NOT EXISTS ?;";
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(con->prepareStatement(prep_stmt_str));
+            prep_stmt->setString(1,dbName);
+            prep_stmt->execute();
         }
         catch(sql::SQLException &e){
             throw e;
         }
     }
 
-    void DatabaseConnection::dropDB(){
+    void DatabaseConnection::dropDB(std::string& dbName){
         try{
-        	executeStatement("DROP DATABASE IF EXISTS webcrawler;");
+            std::string prep_stmt_str = "DROP DATABASE IF EXISTS ?";
+            std::unique_ptr<sql::PreparedStatement> prep_stmt(con->prepareStatement(prep_stmt_str));
+            prep_stmt->setString(1,dbName);
+            prep_stmt->execute();
         }
         catch(sql::SQLException &e){
             throw e;
         }
+    }
+
+    void DatabaseConnection::setSchema(std::string& dbName){
+        con->setSchema(dbName);
     }
 
     void DatabaseConnection::createTables(){
@@ -103,4 +112,5 @@ namespace webcrawler{
         }
         return links;
     }
+
 }

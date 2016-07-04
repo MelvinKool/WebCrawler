@@ -30,6 +30,13 @@ bool is_number(const std::string& s){
         s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
+bool yesNo(){
+
+    std::string answer;
+    std::getline(std::cin,answer);
+    return answer == "y";
+}
+
 void askForDBCredentials(){
     std::string host,user,password,name;
     std::cout << "Database host: ";
@@ -51,15 +58,12 @@ bool getDBCredentials(){
     do{
         askForDBCredentials();
         try{
-            DatabaseConnection db(db_host,db_name,db_user,db_password);
+            DatabaseConnection db(db_host,db_user,db_password);
             authenticationSuccessful = true;
         }
         catch(sql::SQLException &e){
             std::cout << "Authentication failed. Try again? y/n: ";
-            std::string answer;
-            std::getline(std::cin,answer);
-            if(answer == "n")
-                return false;
+            if(!yesNo()) return false;
             std::cout << "Please re-enter your credentials:" << std::endl;
         }
     }
@@ -105,9 +109,20 @@ int main(int argc, char* argv[] )
     if(!getDBCredentials()) return EXIT_FAILURE;
     if(std::string(argv[1]) == "--create"){
         std::cout << "Connecting to db..." << std::endl;
-        DatabaseConnection db(db_host,db_name,db_user,db_password);
+        DatabaseConnection db(db_host,db_user,db_password);
+        try{
+            db.setSchema(db_name);
+            std::cout << "It seems like the database already exists. Drop current tables? y/n: ";
+            if(yesNo())
+                db.dropTables();
+            else
+                return EXIT_FAILURE;
+        }
+        catch(sql::SQLException &e){
+            db.createDB(db_name);
+            db.setSchema(db_name);
+        }
         std::cout << "Creating tables..." << std::endl;
-        db.dropTables();
         db.createTables();
         std::cout << "Creating tables done." << std::endl;
         return 0;

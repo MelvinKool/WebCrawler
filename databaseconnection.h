@@ -8,14 +8,15 @@
 namespace webcrawler{
         class DatabaseConnection{
         public:
-            DatabaseConnection(std::string& host, std::string& dbSchema, std::string& user, std::string& password);
+            DatabaseConnection(std::string& host,std::string& user,std::string& password);
             // ~DatabaseConnection();
-            void connect(std::string& host, std::string& dbSchema ,std::string& user,std::string& password);
+            void connect(std::string& host,std::string& user,std::string& password);
             void executeStatement(const char* statement);
-            void createDB();
-            void dropDB();
+            void createDB(std::string& dbName);
+            void dropDB(std::string& dbName);
             void createTables();
             void dropTables();
+            void setSchema(std::string& dbName);
             std::vector<std::string> getLinksToCrawl(int amount, int daysAgo);
             //void insertLink(std::string& link);
         private:
