@@ -3,19 +3,20 @@
 
 #include <string>
 
-class URL{
+class URL {
 private:
     std::string url;
 public:
     // URL(std::string url);
-    URL(){}
+    URL() {}
     // bool isAbsolute();
     // bool isRelative();
-    void setURL(std::string url);
-    static std::string getFirstPiece(std::string& url);
-    static std::string toBaseURL(std::string& url);
-    bool isValidAbsolute();
-    std::string toString();
-    void toAbsolute(std::string& relativeToUrl);
+    void setURL(const std::string &url);
+    static std::string getFirstPiece(const std::string &url);
+    static std::string toBaseURL(const std::string &url);
+    bool isValidAbsolute() const;
+    std::string toString() const;
+    void toAbsolute(const std::string &relativeToUrl);
 };
-#endif
+
+#endif // URL_H

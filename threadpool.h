@@ -7,6 +7,7 @@
 #include <deque>
 #include <condition_variable>
 #include <unordered_set>
+#include <functional>
 
 class ThreadPool; // forward declare
 
@@ -46,4 +47,4 @@ private:
     bool stop;
 };
 
-#endif
+#endif // THREADPOOL_H

@@ -5,8 +5,9 @@
 
 class WebCurl {
 private:
-    static size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up);
+    static size_t writeCallback(char *buf, size_t size, size_t nmemb, void *up);
 public:
-    static std::string getPage(std::string& url);
+    static std::string getPage(const std::string &url);
 };
-#endif
+
+#endif // WCURL_H
