@@ -27,7 +27,6 @@ namespace webcrawler
         void stop();
     private:
         bool stopped = false;
-        int numThreads;
         std::unique_ptr<ThreadPool> pool;
         std::queue<std::string> urlPool;
         std::unordered_set<std::string> foundURLs;
