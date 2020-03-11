@@ -21,7 +21,7 @@
 
 namespace webcrawler
 {
-    Crawler::Crawler(int numThreads) : pool(new ThreadPool(numThreads, urlsInPool)) {}
+    Crawler::Crawler(size_t numThreads) : pool(new ThreadPool(numThreads, urlsInPool)) {}
 
     Crawler::~Crawler() {
         stopped = true;
@@ -45,9 +45,9 @@ namespace webcrawler
                 return;
             }
             //get amount of urls equal to amount of free workers and amount of links
-            unsigned int workersFree = pool->getAmountFreeWorkers();
+            size_t workersFree = pool->getAmountFreeWorkers();
             // spdlog::info("Workers free: {}", workersFree);
-            for (unsigned int i = 0; i < workersFree && i < urlPool.size(); i++) {
+            for (size_t i = 0; i < workersFree && i < urlPool.size(); i++) {
                 //get an url to crawl
                 std::string nextURL = urlPool.front();
                 urlPool.pop();
@@ -94,15 +94,15 @@ namespace webcrawler
             return; //change this is the future
         }
         // MYSQL *conn;
-        // conn = mysql_init(NULL);
-        // if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, NULL, 0)){
+        // conn = mysql_init(nullptr);
+        // if(!mysql_real_connect(conn,"localhost","root", "Timjar00", "LINKDB", 0, nullptr, 0)){
         // 	printf("Dit gaat niet goed");
         // }
         std::vector<std::string> links;
         GumboOutput *output = gumbo_parse(pageContent.c_str());
         extractLinks(output->root, links, url);
         gumbo_destroy_output(&kGumboDefaultOptions, output);
-        for (std::string link : links) {
+        for (const std::string &link : links) {
             // std::string query;
             std::lock_guard<std::mutex> foundLock(found_mut);
             if (foundURLs.find(link) == foundURLs.end()) {

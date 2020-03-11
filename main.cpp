@@ -1,32 +1,29 @@
 #include <iostream>
 #include <string>
 #include <cstdio>
-#include <signal.h>
-#include <assert.h>
+#include <csignal>
+#include <cassert>
 #include <algorithm>
 #include <curl/curl.h>
 #include <mysql/mysql.h>
 #include "cxxopts.hpp"
 #include "crawler.h"
 
-using namespace webcrawler;
-
 void search(std::string find) {
-    MYSQL *conn = mysql_init(NULL);
+    MYSQL *conn = mysql_init(nullptr);
     std::string query;
-    if (!mysql_real_connect(conn, "localhost", "root", "Timjar00", "LINKDB", 0, NULL, 0)) {
+    if (!mysql_real_connect(conn, "localhost", "root", "Timjar00", "LINKDB", 0, nullptr, 0)) {
         puts("No Database connection.");
     }
     else {
-        MYSQL_RES *res;
-        MYSQL_ROW row;
         std::cout << ("Enter a string to search for something specific(or leave blank to view full database): ");
         std::getline(std::cin, find);
         query = "SELECT * FROM links WHERE link LIKE '%" + find + "%'";
         mysql_query(conn, query.c_str());
-        res = mysql_use_result(conn);
+        MYSQL_RES *res = mysql_use_result(conn);
         puts("Your search returned these results: ");
-        while ((row = mysql_fetch_row(res)) != NULL)
+        MYSQL_ROW row;
+        while ((row = mysql_fetch_row(res)) != nullptr)
         {
             printf("%s\n", row[0]);
         }
@@ -51,7 +48,7 @@ int main(int argc, char *argv[]) {
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
 
-    sigaction(SIGINT, &sigIntHandler, NULL);
+    sigaction(SIGINT, &sigIntHandler, nullptr);
     /////////////////
 
     int numThreads = 4;
@@ -86,8 +83,8 @@ int main(int argc, char *argv[]) {
     else if (!link.empty()) {
         url = link;
     }
-    
-    Crawler crawler(numThreads);
+
+    webcrawler::Crawler crawler(numThreads);
     crawler.start(url);
     curl_global_cleanup(); //not thread safe, so only use in main
     return EXIT_SUCCESS;

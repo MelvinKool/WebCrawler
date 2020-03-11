@@ -28,10 +28,10 @@ std::string URL::toString() const {
 std::string URL::getFirstPiece(const std::string &url) {
     std::size_t found = url.find("//");
     if (found == std::string::npos) {
-        found = url.find("/");
+        found = url.find('/');
     }
     else {
-        found = url.find("/", found + 2);
+        found = url.find('/', found + 2);
     }
     if (found == std::string::npos) {
         return url;
@@ -51,10 +51,10 @@ bool URL::isValidAbsolute() const {
     example.com/index/index.php -> example.com/index/
 */
 std::string URL::toBaseURL(const std::string &url) {
-    std::string baseURL = "";
+    std::string baseURL;
     // if the url is http://example.com, ignore the / in the :// part
     std::size_t toIgnore = url.find("://");
-    std::size_t found = url.find_last_of("/");
+    std::size_t found = url.find_last_of('/');
     if (found == std::string::npos || found < toIgnore + 3) {
         baseURL = url + "/";
     }
@@ -70,8 +70,8 @@ void URL::toAbsolute(const std::string &relativeToUrl) {
     }
     //convert to base url: example.com/example/ instead of example.com/example/index.php
     std::string baseURL = URL::toBaseURL(relativeToUrl);
-    std::string absoluteUrl = "";
-    std::size_t found = url.find("/");
+    std::string absoluteUrl;
+    std::size_t found = url.find('/');
     if (found != std::string::npos) {
         //url begins with /
         if (found == 0) {

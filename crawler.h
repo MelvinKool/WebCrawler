@@ -21,7 +21,7 @@ namespace webcrawler
         static void extractLinks(GumboNode *node, std::vector<std::string> &foundLinks, const std::string &relativeToUrl);
         void crawl(const std::string &url);
     public:
-        explicit Crawler(int numberThreads);
+        explicit Crawler(size_t numThreads);
         ~Crawler();
         void start(const std::string &startURL);
         void stop();
