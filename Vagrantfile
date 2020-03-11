@@ -22,5 +22,7 @@ Vagrant.configure("2") do |config|
    config.vm.provision "shell", inline: <<-SHELL
      apt-get update
      apt-get install -y g++ cmake
+     echo "Installing optional dependencies for if you do not use -DHunter in cmake"
+     apt-get install -y libcurl4 libcurl4-openssl-dev libspdlog-dev libmysqlclient-dev
    SHELL
 end
