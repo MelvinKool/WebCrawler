@@ -7,11 +7,9 @@
 #include <chrono>
 #include "threadpool.h"
 
-void Worker::operator()()
-{
+void Worker::operator()() {
     std::function<void()> task;
-    while (true)
-    {
+    while (true) {
         std::unique_lock<std::mutex> locker(pool.queue_mutex);
         //worker is free again, add to free workers
         std::unique_lock<std::mutex> workLocker(pool.workersLocker);
@@ -36,21 +34,19 @@ void Worker::operator()()
     }
 }
 
-ThreadPool::ThreadPool(size_t threads,std::condition_variable& notifier): notifier(notifier), stop(false)
-{
+ThreadPool::ThreadPool(const size_t &threads, std::condition_variable& notifier): notifier(notifier), stop(false) {
     for (size_t i = 0; i < threads; ++i)
-        workers.push_back(std::thread(Worker(*this,i+1)));
+        workers.emplace_back(Worker(*this,i+1));
 }
 
-ThreadPool::~ThreadPool()
-{
+ThreadPool::~ThreadPool() {
     stop = true; // stop all threads
     cond.notify_all();
     for (auto &thread: workers)
         thread.join();
 }
 
-int ThreadPool::getAmountFreeWorkers(){
+size_t ThreadPool::getAmountFreeWorkers() {
     std::lock_guard<std::mutex> workLocker(workersLocker);
     return freeWorkers.size();
 }

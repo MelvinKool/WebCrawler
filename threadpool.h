@@ -7,6 +7,7 @@
 #include <deque>
 #include <condition_variable>
 #include <unordered_set>
+#include <functional>
 
 class ThreadPool; // forward declare
 
@@ -21,7 +22,7 @@ private:
 
 class ThreadPool {
 public:
-    ThreadPool(size_t threads,std::condition_variable& notifier);
+    ThreadPool(const size_t &threads, std::condition_variable& notifier);
     template<class F>
     void enqueue(F f)
     {
@@ -31,7 +32,7 @@ public:
         cond.notify_one();
     }
     ~ThreadPool();
-    int getAmountFreeWorkers();
+    size_t getAmountFreeWorkers();
 private:
     friend class Worker;
 
@@ -46,4 +47,4 @@ private:
     bool stop;
 };
 
-#endif
+#endif // THREADPOOL_H
